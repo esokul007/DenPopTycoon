@@ -79,16 +79,15 @@ def draw_soda_icons():
         pygame.draw.rect(screen, (100, 100, 100), rect)
 
 while True:
-
+    cup_rect = pygame.Rect(cup_x, cup_y, cup_width, cup_height)  # Adjust to match your cup size
+    current_time = time.time()
+    for name, rect in soda_buttons.items():
+        if current_time - last_fill_time[name] >= 1.0:
+            if cup_rect.colliderect(rect):
+                print({cup_contents[f"{name}"]})
+                cup_contents[f"{name}"] += 0.02
+                last_fill_time[name] = current_time
     for event in pygame.event.get():
-        current_time = time.time()
-        cup_rect = pygame.Rect(cup_x, cup_y, cup_width, cup_height)  # Adjust to match your cup size
-        for name, rect in soda_buttons.items():
-            if current_time - last_fill_time[name] >= 1.0:
-                if cup_rect.colliderect(rect):
-                    print({cup_contents[f"{name}"]})
-                    cup_contents[f"{name}"] += 0.02
-                    last_fill_time[name] = current_time
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
