@@ -35,10 +35,13 @@ SODA_ICON_SPACING = 35
 
 SODA_BUTTONS = {
     "coke": pygame.Rect(60, 345, 15, 20),
-    "fanta": pygame.Rect(94, 345, 15, 20),
+    "fanta": pygame.Rect(93, 345, 15, 20),
     "lemonade": pygame.Rect(128, 345, 15, 20),
     "mug": pygame.Rect(162, 345, 15, 20),
-    "powerade": pygame.Rect(196, 345, 15, 20),
+    "powerade": pygame.Rect(195, 345, 15, 20),
+    "mountain_dew": pygame.Rect(228, 345, 15, 20),
+    "sprite": pygame.Rect(262, 345, 15, 20),
+    "water": pygame.Rect(296, 345, 15, 20)
 }
 
 SODA_ICON_FILES = {
@@ -47,6 +50,9 @@ SODA_ICON_FILES = {
     "lemonade": "assets/lemonade.jpg",
     "mug": "assets/mug.jpg",
     "powerade": "assets/powerade.jpg",
+    "mountain_dew": "assets/mountain_dew.png",
+    "sprite": "assets/sprite.jpg",
+    "water": "assets/water.png",
 }
 
 CUSTOMER_ICON_FILES = {
