@@ -24,6 +24,90 @@ cup_contents= {"fanta": 0.0,
                "mug": 0.0,
                }
 import time
+# menu attributes
+font_title = pygame.font.SysFont("Arial", 12, bold=True)
+font_content = pygame.font.SysFont("Arial", 10)
+menu_bg_color = (50, 50, 50)
+menu_text_color = (255, 255, 255)
+
+drink_recipes = {
+    "All American Marching Band": {
+        "powerade": 0.25,
+        "sprite": 0.25,
+        "lemonade": 0.25,
+        "mountain dew": 0.25
+    },
+    "BirdDog": {
+        "mountain dew": 0.5,
+        "fanta": 0.25,
+        "coke": 0.125,
+        "mug": 0.125
+    },
+    "Blast of Baja": {
+        "powerade": 0.25,
+        "mountain dew": 0.75
+    },
+    "Bonecrush City": {
+        "fanta": 0.666,
+        "sprite": 0.333,
+    },
+    "Bug Juice": {
+        "mountain dew": 0.333,
+        "powerade": 0.2,
+        "sprite": 0.6
+    },
+    "Candy Land": {
+        "mug": 0.333,
+        "fanta": 0.333,
+        "mountain dew": 0.333
+    },
+    "Cherry Smuggler": {
+        "coke": 0.5,
+        "mountain dew": 0.5
+    },
+    "Citrus Slam!": {
+        "sprite": 0.5,
+        "mountain dew": 0.5
+    },
+    "Communist Threat": {
+        "mug": 0.5,
+        "coke": 0.5
+    },
+    "Cotton Candy Overdose": {
+        "mug": 0.75,
+        "powerade": 0.25
+    },
+    "The Boiler Babe": {
+        "lemonade": 0.333,
+        "fanta": 0.333,
+        "mountain dew": 0.333
+    },
+    "Tooty Fruity": {
+        "coke": 0.25,
+        "mountain dew": 0.25,
+        "powerade": 0.25,
+        "lemonade": 0.25
+    },
+    "The IU Special": {
+        "powerade": 0.5,
+        "milk": 0.5,
+    },
+    "The Gynecologist": {
+        "dr pepper": 0.333,
+        "mug": 0.333,
+        "coke": 0.333
+    },
+    "Dr Love": {
+        "fanta": 0.5,
+        "coke": 0.25,
+        "mug": 0.25
+    },
+    "Dirty Sprite": {
+        "water": 0.5,
+        "sprite": 0.333,
+        "lemonade": 0.166
+    }
+}
 
 dragging = False
 offset_x, offset_y = 0, 0
@@ -51,6 +135,26 @@ fanta = pygame.transform.scale(pygame.image.load("assets/fanta.jpg"), SODA_ICON_
 lemonade = pygame.transform.scale(pygame.image.load("assets/lemonade.jpg"), SODA_ICON_SIZE)
 mug = pygame.transform.scale(pygame.image.load("assets/mug.jpg"), SODA_ICON_SIZE)
 powerade = pygame.transform.scale(pygame.image.load("assets/powerade.jpg"), SODA_ICON_SIZE)
+
+def draw_drink_menu(drink_name, ingredients, position):
+    menu_width = 100
+    menu_height = 30 + 12 * len(ingredients)
+    x, y = position
+
+    pygame.draw.rect(screen, menu_bg_color, (x, y, menu_width, menu_height), border_radius=4)
+
+    title_surface = font_title.render(drink_name, True, menu_text_color)
+    screen.blit(title_surface, (x + 5, y + 5))
+
+    line_y = y + 20
+    for ingredient, amount in ingredients.items():
+        if isinstance(amount, float):
+            text = f"{ingredient}: {amount:.2f}"
+        else:
+            text = f"{ingredient}: {amount}"
+        content_surface = font_content.render(text, True, menu_text_color)
+        screen.blit(content_surface, (x + 5, line_y))
+        line_y += 12
 
 def draw_trapezoid_cup(x, y):
     # Define trapezoid points for upside-down cup
@@ -120,6 +224,20 @@ while True:
     screen.blit(fountain, (40, 230))
     draw_soda_icons()
     draw_trapezoid_cup(cup_x, cup_y)
+
+    # Draw all drink menus horizontally
+    x_start, y_start = 10, 10
+    x, y = x_start, y_start
+
+    for drink_name, ingredients in drink_recipes.items():
+        draw_drink_menu(drink_name, ingredients, (x, y))
+        x += 80  # Space between menus
+
+        # Optional: wrap to next row if off-screen
+        if x > WIDTH - 80:
+            x = x_start
+            y += 60
+
 
     pygame.display.flip()
     clock.tick(60)  # Limit to 60 frames per second
