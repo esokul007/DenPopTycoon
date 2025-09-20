@@ -16,6 +16,7 @@ FOUNTAIN_POSITION = (40, 230)
 COUNTER_SIZE = (600, 250)
 FOUNTAIN_SIZE = (400, 250)
 
+ORDER_POSITION = (620, 350)
 CUSTOMER_SPAWN_POSITION = (600, 400)
 CUSTOMER_SIZE = (200, 200)
 
@@ -137,6 +138,11 @@ FONT_CONTENT = pygame.font.SysFont("Arial", 10)
 MENU_BG_COLOR = (50, 50, 50)
 MENU_TEXT_COLOR = (255, 255, 255)
 
+ORDER_FONT = pygame.font.SysFont("Arial", 16)
+BUBBLE_COLOR = (255, 255, 255)
+TEXT_COLOR = (0, 0, 0)
+BORDER_COLOR = (0, 0, 0)
+
 class Customer:
     def __init__(self) -> None:
         self.order = random.choice(list(DRINK_RECIPES.keys()))
@@ -194,6 +200,27 @@ def load_soda_icons() -> dict[str, pygame.Surface]:
         name: pygame.transform.scale(pygame.image.load(path), SODA_ICON_SIZE)
         for name, path in SODA_ICON_FILES.items()
     }
+
+def draw_text_bubble(screen: pygame.Surface, text, position):
+    padding = 10
+    x, y = position
+
+    # Render text
+    text_surface = ORDER_FONT.render(text, True, TEXT_COLOR)
+    text_width, text_height = text_surface.get_size()
+
+    # Bubble dimensions
+    bubble_width = text_width + padding * 2
+    bubble_height = text_height + padding * 2
+
+    # Draw bubble background
+    pygame.draw.rect(screen, BUBBLE_COLOR, (x, y, bubble_width, bubble_height), border_radius=8)
+
+    # Optional: draw border
+    pygame.draw.rect(screen, BORDER_COLOR, (x, y, bubble_width, bubble_height), 2, border_radius=8)
+
+    # Blit text
+    screen.blit(text_surface, (x + padding, y + padding))
 
 
 def draw_drink_menu(
@@ -279,6 +306,7 @@ def draw_frame(
     screen.blit(static_images["fountain"], FOUNTAIN_POSITION)
     draw_soda_icons(screen, soda_icons)
     draw_customer(screen, customer, CUSTOMER_SPAWN_POSITION)
+    draw_text_bubble(screen, customer.order, ORDER_POSITION)
     draw_trapezoid_cup(screen, cup)
     draw_drink_menus(screen)
 
