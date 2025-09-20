@@ -1,4 +1,5 @@
 from __future__ import annotations
+import random
 import sys
 import time
 import pygame
@@ -14,6 +15,9 @@ COUNTER_POSITION = (0, 430)
 FOUNTAIN_POSITION = (40, 230)
 COUNTER_SIZE = (600, 250)
 FOUNTAIN_SIZE = (400, 250)
+
+CUSTOMER_SPAWN_POSITION = (600, 400)
+CUSTOMER_SIZE = (200, 200)
 
 CUP_WIDTH = 40
 CUP_HEIGHT = 60
@@ -42,6 +46,11 @@ SODA_ICON_FILES = {
     "lemonade": "assets/lemonade.jpg",
     "mug": "assets/mug.jpg",
     "powerade": "assets/powerade.jpg",
+}
+
+CUSTOMER_ICON_FILES = {
+    "customer1": "assets/guy1.png",
+    "customer2": "assets/guy2.png",
 }
 
 DRINK_RECIPES = {
@@ -127,6 +136,12 @@ FONT_TITLE = pygame.font.SysFont("Arial", 12, bold=True)
 FONT_CONTENT = pygame.font.SysFont("Arial", 10)
 MENU_BG_COLOR = (50, 50, 50)
 MENU_TEXT_COLOR = (255, 255, 255)
+
+class Customer:
+    def __init__(self) -> None:
+        self.order = random.choice(list(DRINK_RECIPES.keys()))
+        self.sprite = pygame.transform.scale(pygame.image.load(random.choice(list(CUSTOMER_ICON_FILES.values()))), CUSTOMER_SIZE)
+        self.status = "waiting"  # could be 'waiting', 'served', 'left'
 
 
 class Cup:
@@ -232,6 +247,8 @@ def draw_soda_icons(screen: pygame.Surface, icons: dict[str, pygame.Surface]) ->
     for button in SODA_BUTTONS.values():
         pygame.draw.rect(screen, (100, 100, 100), button)
 
+def draw_customer(screen: pygame.Surface, customer: Customer, position: tuple[int, int]) -> None:
+    screen.blit(customer.sprite, position)
 
 def draw_drink_menus(screen: pygame.Surface) -> None:
     x, y = 10, 10
@@ -247,12 +264,14 @@ def draw_frame(
     screen: pygame.Surface,
     static_images: dict[str, pygame.Surface],
     soda_icons: dict[str, pygame.Surface],
+    customer: Customer,
     cup: Cup,
 ) -> None:
     screen.fill(BACKGROUND_COLOR)
     screen.blit(static_images["counter"], COUNTER_POSITION)
     screen.blit(static_images["fountain"], FOUNTAIN_POSITION)
     draw_soda_icons(screen, soda_icons)
+    draw_customer(screen, customer, CUSTOMER_SPAWN_POSITION)
     draw_trapezoid_cup(screen, cup)
     draw_drink_menus(screen)
 
@@ -293,13 +312,17 @@ def main() -> None:
     soda_icons = load_soda_icons()
     cup = Cup(*START_CUP_POSITION)
     last_fill_time = {name: 0.0 for name in SODA_BUTTONS}
+    
+    # Create a customer and print their order
+    customer = Customer()
+    print(f"Customer order: {customer.order}")
 
     while True:
         now = time.time()
         if not handle_events(cup):
             break
         update_cup_fill(cup, last_fill_time, now)
-        draw_frame(screen, static_images, soda_icons, cup)
+        draw_frame(screen, static_images, soda_icons, customer, cup)
         pygame.display.flip()
         clock.tick(FPS)
 
