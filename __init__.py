@@ -311,13 +311,14 @@ def draw_frame(
     screen.blit(static_images["counter"], COUNTER_POSITION)
     screen.blit(static_images["fountain"], FOUNTAIN_POSITION)
     draw_soda_icons(screen, soda_icons)
-    draw_customer(screen, customer, CUSTOMER_SPAWN_POSITION)
-    draw_text_bubble(screen, customer.order, ORDER_POSITION)
+    if customer.status == "waiting":
+        draw_customer(screen, customer, CUSTOMER_SPAWN_POSITION)
+        draw_text_bubble(screen, customer.order, ORDER_POSITION)
     draw_trapezoid_cup(screen, cup)
     draw_drink_menus(screen)
 
 
-def handle_events(cup: Cup) -> bool:
+def handle_events(cup: Cup, customer: Customer) -> bool:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
@@ -327,6 +328,10 @@ def handle_events(cup: Cup) -> bool:
             cup.stop_drag()
         elif event.type == pygame.MOUSEMOTION:
             cup.drag(event.pos)
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                customer.status = "served" # serve order
+                cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
     return True
 
 
@@ -360,8 +365,10 @@ def main() -> None:
 
     while True:
         now = time.time()
-        if not handle_events(cup):
+        if not handle_events(cup, customer):
             break
+        if customer.status == "served":
+            customer = Customer() # New Customer
         update_cup_fill(cup, last_fill_time, now)
         draw_frame(screen, static_images, soda_icons, customer, cup)
         pygame.display.flip()
