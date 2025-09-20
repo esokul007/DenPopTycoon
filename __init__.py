@@ -26,7 +26,7 @@ CUP_HEIGHT = 60
 START_CUP_POSITION = (480, 415)
 
 FILL_SPEED = 0.05
-FILL_COOLDOWN_SECONDS = 1.0
+FILL_COOLDOWN_SECONDS = 0.5
 MAX_FILL_LEVEL = 0.98
 
 SODA_ICON_SIZE = (35, 35)
@@ -306,22 +306,35 @@ def draw_trapezoid_cup(screen: pygame.Surface, cup: Cup) -> None:
     height = CUP_HEIGHT
 
     # Calculate fill height
-    fill_height = height * min(cup.fill_level, 1.0)
-    fill_y = y + height - fill_height  # Fill from bottom up
+    fill_level = min(cup.fill_level, 1.0)
+    fill_height = int(height * fill_level)
+    fill_y = y + height - fill_height
 
-    # Draw fill as a rectangle (you can shape it later)
-    
-    pygame.draw.rect(screen, cup.calculate_color(), (x + 10, fill_y, top_width - 20, fill_height))
+    # Calculate fill trapezoid width at current height
+    width_diff = top_width - bottom_width
+    current_width = bottom_width + int(width_diff * (fill_height / height))
 
-    points = [
+    # Center the fill trapezoid horizontally
+    fill_x = x + (top_width - current_width) // 2
+
+    # Fill trapezoid points
+    fill_bottom_left = (x + (top_width - bottom_width) // 2, y + height)
+    fill_bottom_right = (x + (top_width + bottom_width) // 2, y + height)
+    fill_top_left = (fill_x, fill_y)
+    fill_top_right = (fill_x + current_width, fill_y)
+
+    fill_points = [fill_bottom_left, fill_bottom_right, fill_top_right, fill_top_left]
+    pygame.draw.polygon(screen, cup.calculate_color(), fill_points)
+
+    # Draw cup outline
+    cup_points = [
         (x + (top_width - bottom_width) // 2, y + height),
         (x + (top_width + bottom_width) // 2, y + height),
         (x + top_width, y),
         (x, y),
     ]
-
     cup_surface = pygame.Surface((top_width, height), pygame.SRCALPHA)
-    pygame.draw.polygon(cup_surface, (200, 200, 255, 80), [(px - x, py - y) for px, py in points])
+    pygame.draw.polygon(cup_surface, (200, 200, 255, 80), [(px - x, py - y) for px, py in cup_points])
     screen.blit(cup_surface, (x, y))
 
 
