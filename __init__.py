@@ -139,6 +139,7 @@ DRINK_RECIPES = {
         "lemonade": 0.166,
     },
 }
+DRINK_NAMES = list(DRINK_RECIPES.keys())
 
 FONT_TITLE = pygame.font.SysFont("Arial", 12, bold=True)
 FONT_CONTENT = pygame.font.SysFont("Arial", 10)
@@ -149,6 +150,9 @@ ORDER_FONT = pygame.font.SysFont("Arial", 16)
 BUBBLE_COLOR = (255, 255, 255)
 TEXT_COLOR = (0, 0, 0)
 BORDER_COLOR = (0, 0, 0)
+
+menu_index = 0
+menu_display = True
 
 class Customer:
     def __init__(self) -> None:
@@ -333,17 +337,26 @@ def draw_frame(
         draw_customer(screen, customer, CUSTOMER_SPAWN_POSITION)
         draw_text_bubble(screen, customer.order, ORDER_POSITION)
     draw_trapezoid_cup(screen, cup)
-    draw_drink_menus(screen)
+
+    drink_name = DRINK_NAMES[menu_index]
+    ingredients = DRINK_RECIPES[drink_name]
+    global menu_display
+    if menu_display:
+        draw_drink_menu(screen, drink_name, ingredients, (50, 50))
+
 
 
 def handle_events(cup: Cup, customer: Customer) -> bool:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
+        global menu_display
         if event.type == pygame.MOUSEBUTTONDOWN and cup.rect.collidepoint(event.pos):
             cup.start_drag(event.pos)
+            menu_display = False # display menu off if cup clicked
         elif event.type == pygame.MOUSEBUTTONUP:
             cup.stop_drag()
+            menu_display = True
         elif event.type == pygame.MOUSEMOTION:
             cup.drag(event.pos)
         elif event.type == pygame.KEYDOWN:
@@ -351,6 +364,9 @@ def handle_events(cup: Cup, customer: Customer) -> bool:
                 customer.status = "served" # serve order
                 calc_score(cup.contents, customer.order)
                 cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
+            if event.key == pygame.K_RIGHT:
+                global menu_index
+                menu_index =(menu_index + 1) % len(DRINK_NAMES)
     return True
 
 
@@ -377,7 +393,7 @@ def main() -> None:
     soda_icons = load_soda_icons()
     cup = Cup(*START_CUP_POSITION)
     last_fill_time = {name: 0.0 for name in SODA_BUTTONS}
-    
+
     # Create a customer and print their order
     customer = Customer()
     print(f"Customer order: {customer.order}")
