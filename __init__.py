@@ -9,6 +9,7 @@ pygame.display.set_caption("DenPop Tycoon")
 clock = pygame.time.Clock()
 
 #Constants
+FILL_SPEED = 0.1
 SODA_ICON_SIZE = (35,35)
 SODA_ICON_Y = 275
 SODA_ICON_START_X = 45
@@ -84,9 +85,13 @@ while True:
     for name, rect in soda_buttons.items():
         if current_time - last_fill_time[name] >= 1.0:
             if cup_rect.colliderect(rect):
-                print({cup_contents[f"{name}"]})
-                cup_contents[f"{name}"] += 0.02
-                last_fill_time[name] = current_time
+                if sum(cup_contents.values()) >= 0.98:
+                    print("Cup is full!")
+                    continue
+                else:
+                    print({cup_contents[f"{name}"]})
+                    cup_contents[f"{name}"] += FILL_SPEED
+                    last_fill_time[name] = current_time
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
