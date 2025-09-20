@@ -1,5 +1,6 @@
 import pygame
 import sys
+import time
 
 pygame.init()
 WIDTH, HEIGHT = 800, 600
@@ -9,12 +10,20 @@ clock = pygame.time.Clock()
 
 #Constants
 SODA_ICON_SIZE = (35,35)
-SODA_ICON_Y = 450
+SODA_ICON_Y = 275
 SODA_ICON_START_X = 45
 SODA_ICON_SPACING = 35
 
 # Initial position of the cup
 cup_x, cup_y = 350, 225
+cup_contents= {"fanta": 0.0,
+               "coke": 0.0,
+               "lemonade": 0.0,
+               "powerade": 0.0,
+               "mug": 0.0,
+               }
+import time
+
 dragging = False
 offset_x, offset_y = 0, 0
 cup_width = 40
@@ -28,6 +37,9 @@ soda_buttons = {
     "mug": pygame.Rect(162, 345, 15, 20),
     "powerade": pygame.Rect(196, 345, 15, 20),
 }
+
+# Track last time each soda was filled
+last_fill_time = {name: 0 for name in soda_buttons}
 
 #image loading
 counter = pygame.transform.scale(pygame.image.load("assets/counter.png"), (600, 250))
@@ -67,11 +79,16 @@ def draw_soda_icons():
         pygame.draw.rect(screen, (100, 100, 100), rect)
 
 while True:
+
     for event in pygame.event.get():
+        current_time = time.time()
         cup_rect = pygame.Rect(cup_x, cup_y, cup_width, cup_height)  # Adjust to match your cup size
         for name, rect in soda_buttons.items():
-            if cup_rect.colliderect(rect):
-                print(f"{name} clicked!")
+            if current_time - last_fill_time[name] >= 1.0:
+                if cup_rect.colliderect(rect):
+                    print({cup_contents[f"{name}"]})
+                    cup_contents[f"{name}"] += 0.02
+                    last_fill_time[name] = current_time
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -91,9 +108,8 @@ while True:
                 mouse_x, mouse_y = event.pos
                 cup_x = mouse_x + offset_x
                 cup_y = mouse_y + offset_y
-                for name, rect in soda_buttons.items():
-                    if cup_rect.colliderect(rect):
-                        print(f"{name} clicked!")
+                
+                        
 
     screen.fill((0, 0, 0))  # Fill the screen with black
     screen.blit(counter, (0, 430))
