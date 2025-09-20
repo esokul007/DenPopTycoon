@@ -7,8 +7,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("DenPop Tycoon")
 clock = pygame.time.Clock()
 
-#Constatns
+#Constants
 SODA_ICON_SIZE = (35,35)
+SODA_ICON_Y = 450
+SODA_ICON_START_X = 45
+SODA_ICON_SPACING = 35
 
 # Initial position of the cup
 cup_x, cup_y = 350, 225
@@ -53,11 +56,11 @@ def draw_trapezoid_cup(x, y):
     screen.blit(cup_surface, (x, y))
 
 def draw_soda_icons():
-    screen.blit(coke, (45, 275))
-    screen.blit(fanta, (80, 275))
-    screen.blit(lemonade, (115, 275))
-    screen.blit(mug, (150, 275))
-    screen.blit(powerade, (185, 275))
+    screen.blit(coke, (SODA_ICON_START_X, SODA_ICON_Y))
+    screen.blit(fanta, (SODA_ICON_START_X+ SODA_ICON_SPACING, SODA_ICON_Y))
+    screen.blit(lemonade, (SODA_ICON_START_X+ 2*SODA_ICON_SPACING, SODA_ICON_Y))
+    screen.blit(mug, (SODA_ICON_START_X+ 3*SODA_ICON_SPACING, SODA_ICON_Y))
+    screen.blit(powerade, (SODA_ICON_START_X+ 4*SODA_ICON_SPACING, SODA_ICON_Y))
 
     # Draw gray rectangles (buttons) under each icon
     for rect in soda_buttons.values():
