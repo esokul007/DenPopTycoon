@@ -387,8 +387,6 @@ def draw_frame(
     global menu_display
     if menu_display:
         draw_drink_menu(screen, drink_name, ingredients, (50, 50))
-
-    draw_drink_menus(screen)
     draw_score(screen)
 
 
