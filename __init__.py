@@ -23,7 +23,7 @@ CUSTOMER_SIZE = (200, 200)
 
 CUP_WIDTH = 40
 CUP_HEIGHT = 60
-START_CUP_POSITION = (350, 225)
+START_CUP_POSITION = (480, 415)
 
 FILL_SPEED = 0.05
 FILL_COOLDOWN_SECONDS = 1.0
@@ -54,6 +54,17 @@ SODA_ICON_FILES = {
     "mountain_dew": "assets/mountain_dew.png",
     "sprite": "assets/sprite.jpg",
     "water": "assets/water.png",
+}
+
+SODA_RGB_COLORS = {
+    "coke": (91, 18, 18),
+    "fanta": (255, 145, 0),
+    "lemonade": (231, 235, 117),
+    "mug": (87, 58, 9),
+    "powerade": (26, 160, 249),
+    "mountain_dew": (185, 253, 170),
+    "sprite": (211, 173, 242),
+    "water": (211, 246, 242),
 }
 
 CUSTOMER_ICON_FILES = {
@@ -198,6 +209,19 @@ class Cup:
         self.contents[soda_name] = min(1.0, self.contents[soda_name] + amount)
         return True
     
+    def calculate_color(self) -> tuple[int, int, int]:
+        r = g = b = 0
+        total = self.fill_level
+        if total == 0:
+            return (255, 255, 255)  # Empty cup is white
+        for soda, amount in self.contents.items():
+            ratio = amount / total
+            sr, sg, sb = SODA_RGB_COLORS.get(soda, (255, 255, 255))
+            r += sr * ratio
+            g += sg * ratio
+            b += sb * ratio
+        return (int(r), int(g), int(b))
+    
 # Three below methods are used for calculating order correctness
 def normalize(d):
     total = sum(d.values())
@@ -286,7 +310,8 @@ def draw_trapezoid_cup(screen: pygame.Surface, cup: Cup) -> None:
     fill_y = y + height - fill_height  # Fill from bottom up
 
     # Draw fill as a rectangle (you can shape it later)
-    pygame.draw.rect(screen, (100, 200, 255), (x + 10, fill_y, top_width - 20, fill_height))
+    
+    pygame.draw.rect(screen, cup.calculate_color(), (x + 10, fill_y, top_width - 20, fill_height))
 
     points = [
         (x + (top_width - bottom_width) // 2, y + height),
@@ -296,7 +321,7 @@ def draw_trapezoid_cup(screen: pygame.Surface, cup: Cup) -> None:
     ]
 
     cup_surface = pygame.Surface((top_width, height), pygame.SRCALPHA)
-    pygame.draw.polygon(cup_surface, (200, 200, 255, 150), [(px - x, py - y) for px, py in points])
+    pygame.draw.polygon(cup_surface, (200, 200, 255, 80), [(px - x, py - y) for px, py in points])
     screen.blit(cup_surface, (x, y))
 
 
