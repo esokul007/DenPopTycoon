@@ -14,6 +14,7 @@ FPS = 60
 BACKGROUND_COLOR = (0, 0, 0)
 COUNTER_POSITION = (0, 430)
 FOUNTAIN_POSITION = (40, 230)
+SCOREBOARD_POSITION = (700, 100)
 COUNTER_SIZE = (600, 250)
 FOUNTAIN_SIZE = (400, 250)
 
@@ -165,6 +166,8 @@ BORDER_COLOR = (0, 0, 0)
 menu_index = 0
 menu_display = True
 
+score = 0
+
 class Customer:
     def __init__(self) -> None:
         self.order = random.choice(list(DRINK_RECIPES.keys()))
@@ -238,7 +241,7 @@ def calc_score(cup, order):
     normalized_cup = normalize(cup)
     normalized_order = DRINK_RECIPES[order]
     similarity = cosine_similarity(normalized_cup, normalized_order)
-    print(similarity *100)
+    return (similarity * 100)  # Scale to 0-100
 
 def load_static_images() -> dict[str, pygame.Surface]:
     return {
@@ -359,6 +362,9 @@ def draw_drink_menus(screen: pygame.Surface) -> None:
             x = 10
             y += 60
 
+def draw_score(screen: pygame.Surface) -> None:
+    score_surface = ORDER_FONT.render(f"Score: {score:.0f}", True, (255, 255, 255))
+    screen.blit(score_surface, SCOREBOARD_POSITION)
 
 def draw_frame(
     screen: pygame.Surface,
@@ -382,9 +388,12 @@ def draw_frame(
     if menu_display:
         draw_drink_menu(screen, drink_name, ingredients, (50, 50))
 
+    draw_drink_menus(screen)
+    draw_score(screen)
 
 
 def handle_events(cup: Cup, customer: Customer) -> bool:
+    global score
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
@@ -400,11 +409,13 @@ def handle_events(cup: Cup, customer: Customer) -> bool:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 customer.status = "served" # serve order
-                calc_score(cup.contents, customer.order)
+                score += calc_score(cup.contents, customer.order) # type: ignore
                 cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
             if event.key == pygame.K_RIGHT:
                 global menu_index
                 menu_index =(menu_index + 1) % len(DRINK_NAMES)
+                cup.stop_drag()
+                cup.position = Vector2(*START_CUP_POSITION) # reset cup position
     return True
 
 
