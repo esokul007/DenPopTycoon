@@ -23,6 +23,14 @@ lemonade = pygame.transform.scale(pygame.image.load("assets/lemonade.jpg"), SODA
 mug = pygame.transform.scale(pygame.image.load("assets/mug.jpg"), SODA_ICON_SIZE)
 powerade = pygame.transform.scale(pygame.image.load("assets/powerade.jpg"), SODA_ICON_SIZE)
 
+
+def draw_soda_icons():
+    screen.blit(coke, (45, 275))
+    screen.blit(fanta, (80, 275))
+    screen.blit(lemonade, (115, 275))
+    screen.blit(mug, (150, 275))
+    screen.blit(powerade, (185, 275))
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -32,10 +40,17 @@ while True:
     screen.fill((0, 0, 0))  # Fill the screen with black
     screen.blit(counter, (0, 430))
     screen.blit(fountain, (40, 230))
+    
+    draw_soda_icons()
+    
+    pygame.display.flip()
+    clock.tick(60)  # Limit to 60 frames per second
+
+
+
+def draw_soda_icons():
     screen.blit(coke, (45, 275))
     screen.blit(fanta, (80, 275))
     screen.blit(lemonade, (115, 275))
     screen.blit(mug, (150, 275))
     screen.blit(powerade, (185, 275))
-    pygame.display.flip()
-    clock.tick(60)  # Limit to 60 frames per second
