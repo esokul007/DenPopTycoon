@@ -3,6 +3,7 @@ import random
 import sys
 import time
 import pygame
+import math
 from pygame.math import Vector2
 
 pygame.init()
@@ -192,7 +193,24 @@ class Cup:
             return False
         self.contents[soda_name] = min(1.0, self.contents[soda_name] + amount)
         return True
+    
+# Three below methods are used for calculating order correctness
+def normalize(d):
+    total = sum(d.values())
+    return {k: v / total for k, v in d.items()} if total > 0 else d
 
+def cosine_similarity(a, b):
+    keys = set(a.keys()) | set(b.keys())
+    dot = sum(a.get(k, 0) * b.get(k, 0) for k in keys)
+    mag_a = math.sqrt(sum(a.get(k, 0)**2 for k in keys))
+    mag_b = math.sqrt(sum(b.get(k, 0)**2 for k in keys))
+    return dot / (mag_a * mag_b) if mag_a and mag_b else 0
+
+def calc_score(cup, order):
+    normalized_cup = normalize(cup)
+    normalized_order = DRINK_RECIPES[order]
+    similarity = cosine_similarity(normalized_cup, normalized_order)
+    print(similarity *100)
 
 def load_static_images() -> dict[str, pygame.Surface]:
     return {
@@ -331,6 +349,7 @@ def handle_events(cup: Cup, customer: Customer) -> bool:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 customer.status = "served" # serve order
+                calc_score(cup.contents, customer.order)
                 cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
     return True
 
