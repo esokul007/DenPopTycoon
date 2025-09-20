@@ -23,7 +23,7 @@ CUP_WIDTH = 40
 CUP_HEIGHT = 60
 START_CUP_POSITION = (350, 225)
 
-FILL_SPEED = 0.1
+FILL_SPEED = 0.05
 FILL_COOLDOWN_SECONDS = 1.0
 MAX_FILL_LEVEL = 0.98
 
@@ -225,6 +225,13 @@ def draw_trapezoid_cup(screen: pygame.Surface, cup: Cup) -> None:
     top_width = CUP_WIDTH
     bottom_width = int(0.6 * CUP_WIDTH)
     height = CUP_HEIGHT
+
+    # Calculate fill height
+    fill_height = height * min(cup.fill_level, 1.0)
+    fill_y = y + height - fill_height  # Fill from bottom up
+
+    # Draw fill as a rectangle (you can shape it later)
+    pygame.draw.rect(screen, (100, 200, 255), (x + 10, fill_y, top_width - 20, fill_height))
 
     points = [
         (x + (top_width - bottom_width) // 2, y + height),
