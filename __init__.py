@@ -24,12 +24,19 @@ CUSTOMER_SPAWN_POSITION = (600, 400)
 CUSTOMER_SIZE = (200, 200)
 CUSTOMER_WAIT_TIME = 30  # seconds
 
+# Timer attributes
+    # Timer bar dimensions
+TIME_BAR_X = 200
+TIME_BAR_Y = 50
+TIME_BAR_WIDTH = 450  # total width of the timer bar
+TIME_BAR_HEIGHT = 30
+
 CUP_WIDTH = 40
 CUP_HEIGHT = 60
 START_CUP_POSITION = (480, 415)
 
-FILL_SPEED = 0.05
-FILL_COOLDOWN_SECONDS = 0.5
+FILL_SPEED = 0.02
+FILL_COOLDOWN_SECONDS = 0.1
 MAX_FILL_LEVEL = 0.98
 
 SODA_ICON_SIZE = (35, 35)
@@ -395,6 +402,18 @@ def draw_drink_menus(screen: pygame.Surface) -> None:
             x = 10
             y += 60
 
+def draw_timer(screen: pygame.Surface, customer: Customer):
+
+    # Draw background bar
+    pygame.draw.rect(screen, (255, 255, 255), (TIME_BAR_X, TIME_BAR_Y, TIME_BAR_WIDTH, TIME_BAR_HEIGHT))
+
+    # Calculate fill width based on remaining time
+    fill_ratio = max(0.0, min(customer.wait_time / CUSTOMER_WAIT_TIME, 1.0))
+    fill_width = int(TIME_BAR_WIDTH * fill_ratio)
+
+    # Draw fill bar
+    pygame.draw.rect(screen, (0, 255, 0), (TIME_BAR_X, TIME_BAR_Y, fill_width, TIME_BAR_HEIGHT))
+
 def draw_score(screen: pygame.Surface) -> None:
     score_surface = ORDER_FONT.render(f"Score: {score:.0f}", True, (255, 255, 255))
     screen.blit(score_surface, SCOREBOARD_POSITION)
@@ -421,6 +440,7 @@ def draw_frame(
     if menu_display:
         draw_drink_menu(screen, drink_name, ingredients, (50, 50))
     draw_score(screen)
+    draw_timer(screen, customer)
 
 
 def handle_events(cup: Cup, customer: Customer) -> bool:
