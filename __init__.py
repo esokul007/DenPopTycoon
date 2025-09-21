@@ -22,6 +22,7 @@ FOUNTAIN_SIZE = (400, 250)
 ORDER_POSITION = (620, 350)
 CUSTOMER_SPAWN_POSITION = (600, 400)
 CUSTOMER_SIZE = (200, 200)
+CUSTOMER_WAIT_TIME = 30  # seconds
 
 CUP_WIDTH = 40
 CUP_HEIGHT = 60
@@ -177,9 +178,33 @@ score = 0
 class Customer:
     def __init__(self) -> None:
         self.order = random.choice(list(DRINK_RECIPES.keys()))
-        self.sprite = pygame.transform.scale(pygame.image.load(random.choice(list(CUSTOMER_ICON_FILES.values()))), CUSTOMER_SIZE)
+        base_image = pygame.image.load(random.choice(list(CUSTOMER_ICON_FILES.values())))
+        self.base_sprite = pygame.transform.scale(base_image, CUSTOMER_SIZE)
+        self.mask = pygame.mask.from_surface(self.base_sprite)
         self.status = "waiting"  # could be 'waiting', 'served', 'left'
+        self.wait_time = CUSTOMER_WAIT_TIME
 
+    def update(self, dt: float) -> None:
+        if self.status != "waiting":
+            return
+        self.wait_time = max(0.0, self.wait_time - dt)
+        if self.wait_time <= 0:
+            self.wait_time = 0.0
+            self.status = "left"
+
+    def get_tinted_sprite(self) -> pygame.Surface:
+        if self.status != "waiting":
+            return self.base_sprite
+        remaining_ratio = max(0.0, min(1.0, self.wait_time / CUSTOMER_WAIT_TIME))
+        impatience = 1.0 - remaining_ratio
+        if impatience <= 0:
+            return self.base_sprite
+        tinted = self.base_sprite.copy()
+        red_amount = int(255 * impatience)
+        overlay_surface = pygame.Surface(tinted.get_size(), pygame.SRCALPHA)
+        overlay = self.mask.to_surface(overlay_surface, setcolor=(red_amount, 0, 0, 0), unsetcolor=(0, 0, 0, 0))
+        tinted.blit(overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        return tinted
 
 class Cup:
     def __init__(self, x: int, y: int) -> None:
@@ -358,7 +383,7 @@ def draw_soda_icons(screen: pygame.Surface, icons: dict[str, pygame.Surface]) ->
         pygame.draw.rect(screen, (100, 100, 100), button)
 
 def draw_customer(screen: pygame.Surface, customer: Customer, position: tuple[int, int]) -> None:
-    screen.blit(customer.sprite, position)
+    screen.blit(customer.get_tinted_sprite(), position)
 
 def draw_drink_menus(screen: pygame.Surface) -> None:
     x, y = 10, 10
@@ -452,13 +477,21 @@ def main() -> None:
     # Create a customer and print their order
     customer = Customer()
     print(f"Customer order: {customer.order}")
+    previous_time = time.time()
 
     while True:
         now = time.time()
+        dt = now - previous_time
+        previous_time = now
         if not handle_events(cup, customer):
             break
-        if customer.status == "served":
-            customer = Customer() # New Customer
+        customer.update(dt)
+        if customer.status in {"served", "left"}:
+            if customer.status == "left":
+                print("Customer left before being served.")
+            customer = Customer()
+            print(f"Customer order: {customer.order}")
+            previous_time = now
         update_cup_fill(cup, last_fill_time, now)
         draw_frame(screen, static_images, soda_icons, customer, cup)
         pygame.display.flip()
@@ -470,5 +503,14 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
 
 
