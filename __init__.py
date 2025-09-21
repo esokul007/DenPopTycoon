@@ -77,6 +77,7 @@ SODA_RGB_COLORS = {
 CUSTOMER_ICON_FILES = {
     "customer1": "assets/guy1.png",
     "customer2": "assets/guy2.png",
+    "customer3": "assets/purdue_pete.png"
 }
 
 DRINK_RECIPES = {
