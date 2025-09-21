@@ -33,8 +33,8 @@ MAX_FILL_LEVEL = 0.98
 
 SODA_ICON_SIZE = (35, 35)
 SODA_ICON_Y = 275
-SODA_ICON_START_X = 45
-SODA_ICON_SPACING = 35
+SODA_ICON_START_X = 47
+SODA_ICON_SPACING = 34
 
 SODA_BUTTONS = {
     "coke": pygame.Rect(60, 345, 15, 20),
@@ -44,7 +44,8 @@ SODA_BUTTONS = {
     "powerade": pygame.Rect(195, 345, 15, 20),
     "mountain_dew": pygame.Rect(228, 345, 15, 20),
     "sprite": pygame.Rect(262, 345, 15, 20),
-    "water": pygame.Rect(296, 345, 15, 20)
+    "water": pygame.Rect(296, 345, 15, 20),
+    "milk": pygame.Rect(330, 345, 15, 20),
 }
 
 SODA_ICON_FILES = {
@@ -56,6 +57,7 @@ SODA_ICON_FILES = {
     "mountain_dew": "assets/mountain_dew.png",
     "sprite": "assets/sprite.jpg",
     "water": "assets/water.png",
+    "milk": "assets/milk.jpg",
 }
 
 SELL_SOUND = pygame.mixer.Sound("assets/ChaChing.mp3")
@@ -69,6 +71,7 @@ SODA_RGB_COLORS = {
     "mountain_dew": (185, 253, 170),
     "sprite": (211, 173, 242),
     "water": (211, 246, 242),
+    "milk": (255, 255, 255),
 }
 
 CUSTOMER_ICON_FILES = {
@@ -250,6 +253,7 @@ def load_static_images() -> dict[str, pygame.Surface]:
     return {
         "counter": pygame.transform.scale(pygame.image.load("assets/counter.png"), COUNTER_SIZE),
         "fountain": pygame.transform.scale(pygame.image.load("assets/fountain_pix.png"), FOUNTAIN_SIZE),
+        "background": pygame.transform.scale(pygame.image.load("assets/background.png"), SCREEN_SIZE),
     }
 
 
@@ -376,7 +380,7 @@ def draw_frame(
     customer: Customer,
     cup: Cup,
 ) -> None:
-    screen.fill(BACKGROUND_COLOR)
+    screen.blit(static_images["background"], (0, 0))
     screen.blit(static_images["counter"], COUNTER_POSITION)
     screen.blit(static_images["fountain"], FOUNTAIN_POSITION)
     draw_soda_icons(screen, soda_icons)
