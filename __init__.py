@@ -7,6 +7,7 @@ import math
 from pygame.math import Vector2
 
 pygame.init()
+pygame.mixer.init()
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -56,6 +57,8 @@ SODA_ICON_FILES = {
     "sprite": "assets/sprite.jpg",
     "water": "assets/water.png",
 }
+
+SELL_SOUND = pygame.mixer.Sound("assets/ChaChing.mp3")
 
 SODA_RGB_COLORS = {
     "coke": (91, 18, 18),
@@ -406,6 +409,7 @@ def handle_events(cup: Cup, customer: Customer) -> bool:
             cup.drag(event.pos)
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
+                SELL_SOUND.play()
                 customer.status = "served" # serve order
                 score += calc_score(cup.contents, customer.order) # type: ignore
                 cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
