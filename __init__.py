@@ -22,7 +22,11 @@ FOUNTAIN_SIZE = (400, 250)
 
 
 CUSTOMER_SIZE = (200, 200)
+CUSTOMER_INIT_POS = (550, 400)
+customer_pos = CUSTOMER_INIT_POS
 customer_wait_time = 30  # seconds
+next_customer_time = 20  # seconds
+customer_list = []
 TIME_MULTIPLIER = 0.9
 
 
@@ -184,8 +188,8 @@ menu_display = True
 score = 0
 
 class Customer:
-    def __init__(self) -> None:
-        global customer_wait_time
+    def __init__(self, position) -> None:
+        global customer_wait_time, customer_pos 
         self.order = random.choice(list(DRINK_RECIPES.keys()))
         base_image = pygame.image.load(random.choice(list(CUSTOMER_ICON_FILES.values())))
         self.base_sprite = pygame.transform.scale(base_image, CUSTOMER_SIZE)
@@ -193,10 +197,10 @@ class Customer:
         self.status = "waiting"  # could be 'waiting', 'served', 'left'
         self.wait_time = customer_wait_time
         self.max_changes = 1
-        self.position = (550, 400)
+        self.position = position
         self.order_pos = (self.position[0], self.position[1] - 50)
-
         self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 25)
+        self.new_customer = 1 # How many new customers can be added after this one. Only 1 should be allowed.
 
     def update(self, dt: float) -> None:
         if self.status != "waiting":
@@ -205,6 +209,11 @@ class Customer:
         if self.wait_time <= 0:
             self.wait_time = 0.0
             self.status = "left"
+    
+    def change_pos(self, position):
+        self.position = position
+        self.order_pos = (self.position[0], self.position[1] - 50)
+        self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 25)
 
     def get_tinted_sprite(self) -> pygame.Surface:
         global customer_wait_time
@@ -423,6 +432,13 @@ def random_order_change(screen: pygame.Surface, customer: Customer) -> None:
             print(f"Customer changed order to {customer.order}")
         customer.max_changes = 0
 
+def add_new_customer(screen: pygame.Surface, customer: Customer) -> None:
+    global customer_pos, customer_list
+    last_customer = customer_list[-1]
+    if 9 <= last_customer.wait_time <= 10 and last_customer.new_customer == 1:
+        last_customer.new_customer = 0
+        new_customer = Customer((CUSTOMER_INIT_POS[0] + len(customer_list) * 60, CUSTOMER_INIT_POS[1]))
+        customer_list.append(new_customer)
 
 def draw_score(screen: pygame.Surface) -> None:
     score_surface = ORDER_FONT.render(f"Score: {score:.0f}", True, (255, 255, 255))
@@ -432,16 +448,19 @@ def draw_frame(
     screen: pygame.Surface,
     static_images: dict[str, pygame.Surface],
     soda_icons: dict[str, pygame.Surface],
-    customer: Customer,
     cup: Cup,
 ) -> None:
     screen.blit(static_images["background"], (0, 0))
     screen.blit(static_images["counter"], COUNTER_POSITION)
     screen.blit(static_images["fountain"], FOUNTAIN_POSITION)
     draw_soda_icons(screen, soda_icons)
-    if customer.status == "waiting":
-        draw_customer(screen, customer, customer.position)
-        draw_text_bubble(screen, customer.order, customer.order_pos)
+    for customer in customer_list:
+        if customer.status == "waiting":
+            draw_customer(screen, customer, customer.position)
+            draw_text_bubble(screen, customer.order, customer.order_pos)
+            draw_timer(screen, customer)
+            random_order_change(screen, customer)
+            add_new_customer(screen, customer)
     draw_trapezoid_cup(screen, cup)
 
     drink_name = DRINK_NAMES[menu_index]
@@ -450,12 +469,10 @@ def draw_frame(
     if menu_display:
         draw_drink_menu(screen, drink_name, ingredients, (50, 50))
     draw_score(screen)
-    draw_timer(screen, customer)
-    random_order_change(screen, customer)
 
 
-def handle_events(cup: Cup, customer: Customer) -> bool:
-    global score, menu_display
+def handle_events(cup: Cup) -> bool:
+    global score, menu_display, customer_list
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
@@ -469,9 +486,10 @@ def handle_events(cup: Cup, customer: Customer) -> bool:
             cup.drag(event.pos)
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
+                first_customer = customer_list[0]
                 SELL_SOUND.play()
-                customer.status = "served" # serve order
-                score = max((score + calc_score(cup.contents, customer.order)), 0) # 
+                first_customer.status = "served" # serve order
+                score = max((score + calc_score(cup.contents, first_customer.order)), 0) # 
                 cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
             if event.key == pygame.K_q:
                 cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
@@ -508,29 +526,35 @@ def main() -> None:
     last_fill_time = {name: 0.0 for name in SODA_BUTTONS}
 
     # Create a customer and print their order
-    customer = Customer()
-    print(f"Customer order: {customer.order}")
+    new_customer = Customer(CUSTOMER_INIT_POS)
+    customer_list.append(new_customer)
     previous_time = time.time()
-
-    while True:
+    running = True
+    while running:
         now = time.time()
         dt = now - previous_time
         previous_time = now
-        if not handle_events(cup, customer):
+        if not handle_events(cup):
+            running = False # Close game window
             break
-        customer.update(dt)
-        if customer.status in {"served", "left"}:
-            if customer.status == "left":
-                global score
-                score -= 50
-                print("Customer left before being served.")
-            global customer_wait_time
-            customer_wait_time = max((customer_wait_time * TIME_MULTIPLIER), 20) # Faster order time. Min 20 seconds.
-            customer = Customer()
-            print(f"Customer order: {customer.order}")
-            previous_time = now
+        if len(customer_list) == 0:
+            new_customer = Customer(CUSTOMER_INIT_POS)
+            customer_list.append(new_customer)
+        for customer in customer_list:
+            customer.update(dt)
+            if customer.status in {"served", "left"}:
+                if customer.status == "left":
+                    global score
+                    score -= 50
+                    print("Customer left before being served.")
+                global customer_wait_time, customer_pos
+                customer_wait_time = max((customer_wait_time * TIME_MULTIPLIER), 20) # Faster order time. Min 20 seconds.
+                customer_list.remove(customer)
+                previous_time = now
+        for customer in customer_list:
+            customer.change_pos((CUSTOMER_INIT_POS[0] + (customer_list.index(customer) * 60), CUSTOMER_INIT_POS[1]))
+        draw_frame(screen, static_images, soda_icons, cup)
         update_cup_fill(cup, last_fill_time, now)
-        draw_frame(screen, static_images, soda_icons, customer, cup)
         pygame.display.flip()
         clock.tick(FPS)
 
