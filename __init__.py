@@ -22,7 +22,8 @@ FOUNTAIN_SIZE = (400, 250)
 ORDER_POSITION = (620, 350)
 CUSTOMER_SPAWN_POSITION = (600, 400)
 CUSTOMER_SIZE = (200, 200)
-CUSTOMER_WAIT_TIME = 30  # seconds
+customer_wait_time = 30  # seconds
+TIME_MULTIPLIER = 0.9
 
 # Timer attributes
     # Timer bar dimensions
@@ -170,8 +171,8 @@ DRINK_NAMES = list(DRINK_RECIPES.keys())
 
 FONT_TITLE = pygame.font.SysFont("Arial", 12, bold=True)
 FONT_CONTENT = pygame.font.SysFont("Arial", 10)
-MENU_BG_COLOR = (50, 50, 50)
-MENU_TEXT_COLOR = (255, 255, 255)
+MENU_BG_COLOR = (241, 239, 208)
+MENU_TEXT_COLOR = (0, 0, 0)
 
 ORDER_FONT = pygame.font.SysFont("Arial", 16)
 BUBBLE_COLOR = (255, 255, 255)
@@ -185,12 +186,13 @@ score = 0
 
 class Customer:
     def __init__(self) -> None:
+        global customer_wait_time
         self.order = random.choice(list(DRINK_RECIPES.keys()))
         base_image = pygame.image.load(random.choice(list(CUSTOMER_ICON_FILES.values())))
         self.base_sprite = pygame.transform.scale(base_image, CUSTOMER_SIZE)
         self.mask = pygame.mask.from_surface(self.base_sprite)
         self.status = "waiting"  # could be 'waiting', 'served', 'left'
-        self.wait_time = CUSTOMER_WAIT_TIME
+        self.wait_time = customer_wait_time
 
     def update(self, dt: float) -> None:
         if self.status != "waiting":
@@ -201,9 +203,10 @@ class Customer:
             self.status = "left"
 
     def get_tinted_sprite(self) -> pygame.Surface:
+        global customer_wait_time
         if self.status != "waiting":
             return self.base_sprite
-        remaining_ratio = max(0.0, min(1.0, self.wait_time / CUSTOMER_WAIT_TIME))
+        remaining_ratio = max(0.0, min(1.0, self.wait_time / customer_wait_time))
         impatience = 1.0 - remaining_ratio
         if impatience <= 0:
             return self.base_sprite
@@ -280,6 +283,8 @@ def calc_score(cup, order):
     normalized_cup = normalize(cup)
     normalized_order = DRINK_RECIPES[order]
     similarity = cosine_similarity(normalized_cup, normalized_order)
+    if (similarity*100) < 30:
+        return -50
     return (similarity * 100)  # Scale to 0-100
 
 def load_static_images() -> dict[str, pygame.Surface]:
@@ -324,8 +329,8 @@ def draw_drink_menu(
     ingredients: dict[str, float],
     position: tuple[int, int],
 ) -> None:
-    menu_width = 100
-    menu_height = 30 + 12 * len(ingredients)
+    menu_width = 140
+    menu_height = 60 + 12 * len(ingredients)
     x, y = position
 
     pygame.draw.rect(screen, MENU_BG_COLOR, (x, y, menu_width, menu_height), border_radius=4)
@@ -393,22 +398,13 @@ def draw_soda_icons(screen: pygame.Surface, icons: dict[str, pygame.Surface]) ->
 def draw_customer(screen: pygame.Surface, customer: Customer, position: tuple[int, int]) -> None:
     screen.blit(customer.get_tinted_sprite(), position)
 
-def draw_drink_menus(screen: pygame.Surface) -> None:
-    x, y = 10, 10
-    for drink_name, ingredients in DRINK_RECIPES.items():
-        draw_drink_menu(screen, drink_name, ingredients, (x, y))
-        x += 80
-        if x > SCREEN_WIDTH - 80:
-            x = 10
-            y += 60
-
 def draw_timer(screen: pygame.Surface, customer: Customer):
 
     # Draw background bar
     pygame.draw.rect(screen, (255, 255, 255), (TIME_BAR_X, TIME_BAR_Y, TIME_BAR_WIDTH, TIME_BAR_HEIGHT))
 
     # Calculate fill width based on remaining time
-    fill_ratio = max(0.0, min(customer.wait_time / CUSTOMER_WAIT_TIME, 1.0))
+    fill_ratio = max(0.0, min(customer.wait_time / customer_wait_time, 1.0))
     fill_width = int(TIME_BAR_WIDTH * fill_ratio)
 
     # Draw fill bar
@@ -444,11 +440,10 @@ def draw_frame(
 
 
 def handle_events(cup: Cup, customer: Customer) -> bool:
-    global score
+    global score, menu_display
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
-        global menu_display
         if event.type == pygame.MOUSEBUTTONDOWN and cup.rect.collidepoint(event.pos):
             cup.start_drag(event.pos)
             menu_display = False # display menu off if cup clicked
@@ -461,7 +456,9 @@ def handle_events(cup: Cup, customer: Customer) -> bool:
             if event.key == pygame.K_SPACE:
                 SELL_SOUND.play()
                 customer.status = "served" # serve order
-                score += calc_score(cup.contents, customer.order) # type: ignore
+                score = max((score + calc_score(cup.contents, customer.order)), 0) # 
+                cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
+            if event.key == pygame.K_q:
                 cup.contents = {name: 0.0 for name in SODA_BUTTONS} # reset cup
             if event.key == pygame.K_RIGHT:
                 global menu_index
@@ -509,7 +506,11 @@ def main() -> None:
         customer.update(dt)
         if customer.status in {"served", "left"}:
             if customer.status == "left":
+                global score
+                score -= 50
                 print("Customer left before being served.")
+            global customer_wait_time
+            customer_wait_time = max((customer_wait_time * TIME_MULTIPLIER), 20) # Faster order time. Min 20 seconds.
             customer = Customer()
             print(f"Customer order: {customer.order}")
             previous_time = now
