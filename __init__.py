@@ -193,6 +193,7 @@ class Customer:
         self.mask = pygame.mask.from_surface(self.base_sprite)
         self.status = "waiting"  # could be 'waiting', 'served', 'left'
         self.wait_time = customer_wait_time
+        self.max_changes = 1
 
     def update(self, dt: float) -> None:
         if self.status != "waiting":
@@ -410,6 +411,16 @@ def draw_timer(screen: pygame.Surface, customer: Customer):
     # Draw fill bar
     pygame.draw.rect(screen, (0, 255, 0), (TIME_BAR_X, TIME_BAR_Y, fill_width, TIME_BAR_HEIGHT))
 
+def random_order_change(screen: pygame.Surface, customer: Customer) -> None:
+    global customer_wait_time
+    ratio = customer.wait_time / customer_wait_time
+    if (0.7 <= ratio <= 0.8) and customer.max_changes == 1:
+        if random.random() < 0.2:  # 20% chance if timer is between 70% and 80% done. Only 1 change should be made if any.
+            customer.order = random.choice(list(DRINK_RECIPES.keys()))
+            print(f"Customer changed order to {customer.order}")
+        customer.max_changes = 0
+
+
 def draw_score(screen: pygame.Surface) -> None:
     score_surface = ORDER_FONT.render(f"Score: {score:.0f}", True, (255, 255, 255))
     screen.blit(score_surface, SCOREBOARD_POSITION)
@@ -437,6 +448,7 @@ def draw_frame(
         draw_drink_menu(screen, drink_name, ingredients, (50, 50))
     draw_score(screen)
     draw_timer(screen, customer)
+    random_order_change(screen, customer)
 
 
 def handle_events(cup: Cup, customer: Customer) -> bool:
