@@ -19,18 +19,17 @@ SCOREBOARD_POSITION = (700, 100)
 COUNTER_SIZE = (600, 250)
 FOUNTAIN_SIZE = (400, 250)
 
-ORDER_POSITION = (620, 350)
-CUSTOMER_SPAWN_POSITION = (600, 400)
+
+
 CUSTOMER_SIZE = (200, 200)
 customer_wait_time = 30  # seconds
 TIME_MULTIPLIER = 0.9
 
+
 # Timer attributes
     # Timer bar dimensions
-TIME_BAR_X = 200
-TIME_BAR_Y = 50
-TIME_BAR_WIDTH = 450  # total width of the timer bar
-TIME_BAR_HEIGHT = 30
+TIME_BAR_WIDTH = 100  # total width of the timer bar
+TIME_BAR_HEIGHT = 12
 
 CUP_WIDTH = 40
 CUP_HEIGHT = 60
@@ -194,6 +193,10 @@ class Customer:
         self.status = "waiting"  # could be 'waiting', 'served', 'left'
         self.wait_time = customer_wait_time
         self.max_changes = 1
+        self.position = (550, 400)
+        self.order_pos = (self.position[0], self.position[1] - 50)
+
+        self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 25)
 
     def update(self, dt: float) -> None:
         if self.status != "waiting":
@@ -402,14 +405,14 @@ def draw_customer(screen: pygame.Surface, customer: Customer, position: tuple[in
 def draw_timer(screen: pygame.Surface, customer: Customer):
 
     # Draw background bar
-    pygame.draw.rect(screen, (255, 255, 255), (TIME_BAR_X, TIME_BAR_Y, TIME_BAR_WIDTH, TIME_BAR_HEIGHT))
+    pygame.draw.rect(screen, (255, 255, 255), (customer.time_bar_pos[0], customer.time_bar_pos[1], TIME_BAR_WIDTH, TIME_BAR_HEIGHT))
 
     # Calculate fill width based on remaining time
     fill_ratio = max(0.0, min(customer.wait_time / customer_wait_time, 1.0))
     fill_width = int(TIME_BAR_WIDTH * fill_ratio)
 
     # Draw fill bar
-    pygame.draw.rect(screen, (0, 255, 0), (TIME_BAR_X, TIME_BAR_Y, fill_width, TIME_BAR_HEIGHT))
+    pygame.draw.rect(screen, (0, 255, 0), (customer.time_bar_pos[0], customer.time_bar_pos[1], fill_width, TIME_BAR_HEIGHT))
 
 def random_order_change(screen: pygame.Surface, customer: Customer) -> None:
     global customer_wait_time
@@ -437,8 +440,8 @@ def draw_frame(
     screen.blit(static_images["fountain"], FOUNTAIN_POSITION)
     draw_soda_icons(screen, soda_icons)
     if customer.status == "waiting":
-        draw_customer(screen, customer, CUSTOMER_SPAWN_POSITION)
-        draw_text_bubble(screen, customer.order, ORDER_POSITION)
+        draw_customer(screen, customer, customer.position)
+        draw_text_bubble(screen, customer.order, customer.order_pos)
     draw_trapezoid_cup(screen, cup)
 
     drink_name = DRINK_NAMES[menu_index]
