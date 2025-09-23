@@ -210,8 +210,21 @@ class Customer:
             self.wait_time = 0.0
             self.status = "left"
     
-    def change_pos(self, position):
-        self.position = position
+    def change_pos(self, target_pos, dt, speed = 400):
+        x, y = self.position
+        tx, ty = target_pos
+        dx = tx - x
+        dy = ty - y
+        distance = (dx**2 + dy**2) ** 0.5
+        if distance < 1:
+            self.position = target_pos
+        else:
+            step = speed * dt
+            if step > distance:
+                step = distance
+            nx = x + dx / distance * step
+            ny = y + dy / distance * step
+            self.position = (nx, ny)
         self.order_pos = (self.position[0], self.position[1] - 50)
         self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 10)
 
@@ -551,7 +564,7 @@ def main() -> None:
                 customer_list.remove(customer)
                 previous_time = now
         for customer in customer_list:
-            customer.change_pos((CUSTOMER_INIT_POS[0] + (customer_list.index(customer) * 100), CUSTOMER_INIT_POS[1]))
+            customer.change_pos((CUSTOMER_INIT_POS[0] + (customer_list.index(customer) * 100), CUSTOMER_INIT_POS[1]), dt)
         draw_frame(screen, static_images, soda_icons, cup)
         update_cup_fill(cup, last_fill_time, now)
         pygame.display.flip()
