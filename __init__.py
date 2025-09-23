@@ -21,7 +21,7 @@ FOUNTAIN_SIZE = (400, 250)
 
 
 
-CUSTOMER_SIZE = (200, 200)
+CUSTOMER_SIZE = (100, 100)
 CUSTOMER_INIT_POS = (550, 400)
 customer_pos = CUSTOMER_INIT_POS
 customer_wait_time = 30  # seconds
@@ -32,8 +32,8 @@ TIME_MULTIPLIER = 0.9
 
 # Timer attributes
     # Timer bar dimensions
-TIME_BAR_WIDTH = 100  # total width of the timer bar
-TIME_BAR_HEIGHT = 12
+TIME_BAR_WIDTH = 50  # total width of the timer bar
+TIME_BAR_HEIGHT = 6
 
 CUP_WIDTH = 40
 CUP_HEIGHT = 60
@@ -177,7 +177,7 @@ FONT_CONTENT = pygame.font.SysFont("Arial", 10)
 MENU_BG_COLOR = (241, 239, 208)
 MENU_TEXT_COLOR = (0, 0, 0)
 
-ORDER_FONT = pygame.font.SysFont("Arial", 16)
+ORDER_FONT = pygame.font.SysFont("Arial", 12)
 BUBBLE_COLOR = (255, 255, 255)
 TEXT_COLOR = (0, 0, 0)
 BORDER_COLOR = (0, 0, 0)
@@ -199,7 +199,7 @@ class Customer:
         self.max_changes = 1
         self.position = position
         self.order_pos = (self.position[0], self.position[1] - 50)
-        self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 25)
+        self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 10)
         self.new_customer = 1 # How many new customers can be added after this one. Only 1 should be allowed.
 
     def update(self, dt: float) -> None:
@@ -213,7 +213,7 @@ class Customer:
     def change_pos(self, position):
         self.position = position
         self.order_pos = (self.position[0], self.position[1] - 50)
-        self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 25)
+        self.time_bar_pos = (self.position[0] + ((CUSTOMER_SIZE[0]) / 4), self.order_pos[1] - 10)
 
     def get_tinted_sprite(self) -> pygame.Surface:
         global customer_wait_time
@@ -437,7 +437,7 @@ def add_new_customer(screen: pygame.Surface, customer: Customer) -> None:
     last_customer = customer_list[-1]
     if 9 <= last_customer.wait_time <= 10 and last_customer.new_customer == 1:
         last_customer.new_customer = 0
-        new_customer = Customer((CUSTOMER_INIT_POS[0] + len(customer_list) * 60, CUSTOMER_INIT_POS[1]))
+        new_customer = Customer((CUSTOMER_INIT_POS[0] + len(customer_list) * 100, CUSTOMER_INIT_POS[1]))
         customer_list.append(new_customer)
 
 def draw_score(screen: pygame.Surface) -> None:
@@ -545,14 +545,13 @@ def main() -> None:
             if customer.status in {"served", "left"}:
                 if customer.status == "left":
                     global score
-                    score -= 50
-                    print("Customer left before being served.")
+                    score = max(score - 50, 0) # 
                 global customer_wait_time, customer_pos
                 customer_wait_time = max((customer_wait_time * TIME_MULTIPLIER), 20) # Faster order time. Min 20 seconds.
                 customer_list.remove(customer)
                 previous_time = now
         for customer in customer_list:
-            customer.change_pos((CUSTOMER_INIT_POS[0] + (customer_list.index(customer) * 60), CUSTOMER_INIT_POS[1]))
+            customer.change_pos((CUSTOMER_INIT_POS[0] + (customer_list.index(customer) * 100), CUSTOMER_INIT_POS[1]))
         draw_frame(screen, static_images, soda_icons, cup)
         update_cup_fill(cup, last_fill_time, now)
         pygame.display.flip()
